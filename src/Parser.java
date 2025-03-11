@@ -1,3 +1,4 @@
+import statements.FunctionDeclarationStatement;
 import statements.PrintStatement;
 import statements.Statement;
 import statements.VarDeclaration;
@@ -27,6 +28,8 @@ public class Parser {
             return parseVarDeclaration();
         } else if (token.type == Token.Type.KEYWORD_PRINT) {
             return parsePrintStatement();
+        } else if (token.type == Token.Type.KEYWORD_FUNCTION) {
+            return parseFunctionDeclaration();
         }
         throw new RuntimeException("Unbekannte Anweisung: " + token);
     }
@@ -44,6 +47,7 @@ public class Parser {
         consume(Token.Type.KEYWORD_PRINT);
         Token name = consume(Token.Type.IDENTIFIER);
         consume(Token.Type.SEMICOLON);
+        System.out.println("parsed name: " + name.value);
         return new PrintStatement(name.value);
     }
 
@@ -55,4 +59,27 @@ public class Parser {
         position++;
         return token;
     }
+
+    private Statement parseFunctionDeclaration() {
+        consume(Token.Type.KEYWORD_FUNCTION);
+        Token name = consume(Token.Type.IDENTIFIER);
+        consume(Token.Type.LEFT_PAREN);
+        List<String> parameters = new ArrayList<>();
+        while (tokens.get(position).type != Token.Type.RIGHT_PAREN) {
+            final Token token = consume(Token.Type.IDENTIFIER);
+            parameters.add(token.value);
+            if (tokens.get(position).type == Token.Type.COMMA) {
+                position++;
+            }
+        }
+        consume(Token.Type.RIGHT_PAREN);
+        consume(Token.Type.LEFT_BRACE);
+        List<Statement> body = new ArrayList<>();
+        while (tokens.get(position).type != Token.Type.RIGHT_BRACE) {
+            body.add(parseStatement());
+        }
+        consume(Token.Type.RIGHT_BRACE);
+        return new FunctionDeclarationStatement(name.value, parameters, body);
+    }
+
 }
